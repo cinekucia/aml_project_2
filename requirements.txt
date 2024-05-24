@@ -1,0 +1,13 @@
+pandas
+numpy
+scikit-learn
+matplotlib
+optuna
+xgboost
+scipy
+jupyter
+notebook
+wandb
+torch
+lightning
+torchmetrics
