@@ -30,6 +30,6 @@ parameters:
         - rbf
         - sigmoid
   test_size:
-    value: 0.2
+    value: 0.5
   repeat:
     value: 5

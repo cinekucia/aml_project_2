@@ -36,6 +36,6 @@ parameters:
         - 6
         - 7
   test_size:
-    value: 0.2
+    value: 0.5
   repeat:
     value: 5
