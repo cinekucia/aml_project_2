@@ -30,10 +30,10 @@ class TrainingDataset(pl.LightningDataModule):
     @property
     def data_loader_kwargs(self) -> dict:
         data = {}
-        # if sys.platform in ["linux", "darwin"]:
-        #     data["num_workers"] = min(
-        #         len(os.sched_getaffinity(0)), 8
-        #     )  # num of cpu cores
+        if sys.platform in ["linux", "darwin"]:
+            data["num_workers"] = min(
+                len(os.sched_getaffinity(0)), 8
+            )  # num of cpu cores
         return data
 
     def prepare_data(self) -> None:
