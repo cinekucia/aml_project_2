@@ -9,7 +9,14 @@ from .utils import download_data
 
 
 class TrainingDataset(pl.LightningDataModule):
-    def __init__(self, wandb_logger: WandbLogger, batch_size: int, features: list[int], test_size: float = 0.2, random_seed: int = 42):
+    def __init__(
+        self,
+        wandb_logger: WandbLogger,
+        batch_size: int,
+        features: list[int],
+        test_size: float = 0.2,
+        random_seed: int = 42,
+    ):
         super().__init__()
         self.logger = wandb_logger
         self.batch_size = batch_size
@@ -23,8 +30,10 @@ class TrainingDataset(pl.LightningDataModule):
     @property
     def data_loader_kwargs(self) -> dict:
         data = {}
-        if sys.platform in ["linux", "darwin"]:
-            data["num_workers"] = min(len(os.sched_getaffinity(0)), 8)  # num of cpu cores
+        # if sys.platform in ["linux", "darwin"]:
+        #     data["num_workers"] = min(
+        #         len(os.sched_getaffinity(0)), 8
+        #     )  # num of cpu cores
         return data
 
     def prepare_data(self) -> None:
