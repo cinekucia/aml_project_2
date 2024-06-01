@@ -70,9 +70,7 @@ class LightningModel(pl.LightningModule):
 
     def _save_remote(self, filename: str, **metadata):
         artifact = wandb.Artifact(
-            name=filename,
-            type=ArtifactType.MODEL.value,
-            metadata=metadata
+            name=filename, type=ArtifactType.MODEL.value, metadata=metadata
         )
 
         with artifact.new_file(filename + ".pth", mode="wb") as file:
@@ -97,10 +95,7 @@ class LightningModel(pl.LightningModule):
         return probs, loss
 
     def configure_optimizers(self) -> tuple[list[torch.optim.Optimizer], list[dict]]:
-        optimizer = self.optimizer(
-            self.parameters(),
-            **self.optimizer_params
-        )
+        optimizer = self.optimizer(self.parameters(), **self.optimizer_params)
 
         if self.scheduler_patience is not None and self.scheduler_factor is not None:
             scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
@@ -110,12 +105,14 @@ class LightningModel(pl.LightningModule):
             )
             return (
                 [optimizer],
-                [{
-                    "scheduler": scheduler,
-                    "monitor": "train/loss",
-                    "interval": "epoch",
-                    "frequency": 1,
-                }],
+                [
+                    {
+                        "scheduler": scheduler,
+                        "monitor": "train/loss",
+                        "interval": "epoch",
+                        "frequency": 1,
+                    }
+                ],
             )
         return [optimizer], []
 
@@ -131,9 +128,9 @@ class LightningModel(pl.LightningModule):
         preds, loss = self.loss(xs, ys)
         preds = (preds > 0.5).int().squeeze()
 
-        self.log('train/loss', loss, on_epoch=True, on_step=False)
+        self.log("train/loss", loss, on_epoch=True, on_step=False)
         self.train_acc(preds, ys)
-        self.log('train/accuracy', self.train_acc, on_epoch=True, on_step=False)
+        self.log("train/accuracy", self.train_acc, on_epoch=True, on_step=False)
         self.train_prec(preds, ys)
         self.log("train/precision", self.train_prec, on_epoch=True, on_step=False)
         self.train_recall(preds, ys)
@@ -152,13 +149,16 @@ class LightningModel(pl.LightningModule):
 
         self.log(f"test/loss", loss, on_epoch=True, on_step=False)
         self.test_acc(preds, ys)
-        self.log(f'test/accuracy', self.test_acc, on_epoch=True, on_step=False)
+        self.log(f"test/accuracy", self.test_acc, on_epoch=True, on_step=False)
         self.test_prec(preds, ys)
         self.log("test/precision", self.test_prec, on_epoch=True, on_step=False)
         self.test_recall(preds, ys)
         self.log("test/recall", self.test_recall, on_epoch=True, on_step=False)
         self.test_f1score(preds, ys)
         self.log("test/f1_score", self.test_f1score, on_epoch=True, on_step=False)
+
+        # /////////////////////////
+        self.log("test/std", torch.std(logits), on_epoch=True, on_step=False)
 
         self.test_preds.append(logits.detach().squeeze().cpu())
         self.test_true_values.append(ys.detach().cpu())
@@ -176,17 +176,17 @@ class LightningModel(pl.LightningModule):
 
     def on_test_end(self):
         if self.upload_best_model:
-            self._save_remote(
-                self.model_name, epoch=self.lowest_train_epoch
-            )
+            self._save_remote(self.model_name, epoch=self.lowest_train_epoch)
 
         flattened_preds = torch.flatten(torch.cat(self.test_preds)).numpy()
         flattened_true_values = torch.flatten(torch.cat(self.test_true_values)).numpy()
 
         self.logger.experiment.log(
-            {"test/gain": calculate_gain(
-                flattened_preds,
-                flattened_true_values,
-                self.num_features,
-            )}
+            {
+                "test/gain": calculate_gain(
+                    flattened_preds,
+                    flattened_true_values,
+                    self.num_features,
+                )
+            }
         )
