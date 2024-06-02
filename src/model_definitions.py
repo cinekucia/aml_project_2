@@ -5,6 +5,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis, QuadraticDiscriminantAnalysis
 from sklearn.preprocessing import PolynomialFeatures, SplineTransformer
 from sklearn.svm import SVC
+from sklearn.linear_model import LinearRegression
 
 from metrics import calculate_gain
 
@@ -36,7 +37,6 @@ class BaseModel(ABC):
         :param x: features
         :param y: target
         """
-
         x_processed = self.preprocess_features(x, is_train=True)
         self._fit(x_processed, y)
 
@@ -49,6 +49,15 @@ class BaseModel(ABC):
         :return: target
         """
 
+    def predict(self, x: np.ndarray) -> np.ndarray:
+        """
+        Predict the target for the given features.
+        :param x: features
+        :return: target
+        """
+        x_processed = self.preprocess_features(x, is_train=False)
+        return self._predict(x_processed)
+
     def calculate_gain(self, x: np.ndarray, y: np.ndarray) -> float:
         """
         Calculate the gain of the predictions compared to the ground truth on given
@@ -57,8 +66,7 @@ class BaseModel(ABC):
         :param y: target
         :return: gain
         """
-        x_processed = self.preprocess_features(x, is_train=False)
-        y_pred = self._predict(x_processed)
+        y_pred = self.predict(x)
 
         return calculate_gain(y, y_pred, x.shape[1])
 
@@ -150,3 +158,19 @@ class SVM(BaseModel):
 
     def _predict(self, x: np.ndarray) -> np.ndarray:
         return self.model.predict_proba(x)[:, 1]
+
+
+class EnsembleLDAPolySVM(BaseModel):
+    name = "Ensemble"
+
+    def __init__(self, poly_degree: int = 2, interactions_only: bool = False, kernel: str = "rbf", svm_degree: int = 3):
+        self.lda = LDAPolynomial(poly_degree, interactions_only)
+        self.svm = SVM(kernel, svm_degree)
+
+    def _fit(self, x: np.ndarray, y: np.ndarray) -> None:
+        self.lda.fit(x, y)
+        self.svm.fit(x, y)
+
+    def _predict(self, x: np.ndarray) -> np.ndarray:
+        new_x = np.concatenate([self.lda.predict(x).reshape(-1, 1), self.svm.predict(x).reshape(-1, 1)], axis=1)
+        return np.mean(new_x, axis=1)
