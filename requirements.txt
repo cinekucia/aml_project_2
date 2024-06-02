@@ -11,3 +11,4 @@ wandb
 torch
 lightning
 torchmetrics
+plotly
