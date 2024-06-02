@@ -1,8 +1,9 @@
 features:
-  - 101
   - 102
   - 103
+  - 104
+  - 106
 
-model_type: QDA
+model_type: LDAPolynomial
 repeat: 100
 test_size: 0.2

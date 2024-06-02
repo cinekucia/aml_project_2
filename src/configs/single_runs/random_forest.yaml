@@ -1,8 +1,9 @@
 features:
-  - 101
+  - 0
   - 102
   - 103
+  - 105
 
-model_type: QDA
+model_type: RandomForest
 repeat: 100
 test_size: 0.2
