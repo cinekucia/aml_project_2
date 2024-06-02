@@ -13,7 +13,7 @@ from dataset.utils import download_data
 
 def perform_experiment(
     model: BaseModel, x: np.ndarray, y: np.ndarray, test_size: float = 0.2, repeat: int = 5
-) -> float:
+) -> tuple[float, float, float, float]:
     """
     Perform an experiment with the given model and data.
     """
@@ -24,7 +24,7 @@ def perform_experiment(
         model.fit(x_train, y_train)
         results.append(model.calculate_gain(x_test, y_test))
 
-    return np.mean(results)
+    return np.mean(results), np.std(results), np.max(results), np.min(results)
 
 
 def run_agent():
@@ -34,16 +34,20 @@ def run_agent():
     x, y = download_data(wandb_logger)
     x_selected_features = x[:, sweep_config.features]
     model = sweep_config.model_type(**sweep_config.model_params)
+    mean, std, max_gain, min_gain = perform_experiment(
+        model=model,
+        x=x_selected_features,
+        y=y,
+        test_size=sweep_config.test_size,
+        repeat=sweep_config.repeat,
+    )
 
     wandb_logger.experiment.log(
         {
-            "gain": perform_experiment(
-                model=model,
-                x=x_selected_features,
-                y=y,
-                test_size=sweep_config.test_size,
-                repeat=sweep_config.repeat,
-            )
+            "gain_mean": mean,
+            "gain_std": std,
+            "gain_max": max_gain,
+            "gain_min": min_gain,
         }
     )
 

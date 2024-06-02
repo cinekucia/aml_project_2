@@ -3,10 +3,8 @@ import os
 import yaml
 import wandb
 
-from lightning.pytorch.loggers import WandbLogger
-
 from project_config import config, JobType
-from trainer.train import train
+from experiment import run_agent
 
 
 if __name__ == "__main__":
@@ -34,7 +32,4 @@ if __name__ == "__main__":
         job_type=JobType.TRAINING.value,
         config=experiment_config,
     ) as run:
-        wandb_logger = WandbLogger(project=config.project, entity=config.entity)
-        config_dict = wandb.config.as_dict()
-
-        train(config_dict, wandb_logger)
+        run_agent()
