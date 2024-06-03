@@ -159,18 +159,22 @@ class SVM(BaseModel):
     def _predict(self, x: np.ndarray) -> np.ndarray:
         return self.model.predict_proba(x)[:, 1]
 
+# import naive bayes
+from sklearn.naive_bayes import GaussianNB
 
 class EnsembleLDAPolySVM(BaseModel):
     name = "Ensemble"
 
     def __init__(self, poly_degree: int = 2, interactions_only: bool = False, kernel: str = "rbf", svm_degree: int = 3):
         self.lda = LDAPolynomial(poly_degree, interactions_only)
-        self.svm = SVM(kernel, svm_degree)
+        self.svm = GaussianNB()
+        self.lda_spline = LDASpline(degree=4, knots=5)
 
     def _fit(self, x: np.ndarray, y: np.ndarray) -> None:
         self.lda.fit(x, y)
         self.svm.fit(x, y)
+        self.lda_spline.fit(x, y)
 
     def _predict(self, x: np.ndarray) -> np.ndarray:
-        new_x = np.concatenate([self.lda.predict(x).reshape(-1, 1), self.svm.predict(x).reshape(-1, 1)], axis=1)
+        new_x = np.concatenate([self.lda.predict(x).reshape(-1, 1), self.svm.predict(x).reshape(-1, 1), self.lda_spline.predict(x).reshape(-1, 1)], axis=1)
         return np.mean(new_x, axis=1)
