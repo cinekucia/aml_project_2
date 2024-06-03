@@ -2,7 +2,10 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis, QuadraticDiscriminantAnalysis
+from sklearn.discriminant_analysis import (
+    LinearDiscriminantAnalysis,
+    QuadraticDiscriminantAnalysis,
+)
 from sklearn.preprocessing import PolynomialFeatures, SplineTransformer
 from sklearn.svm import SVC
 from sklearn.linear_model import LinearRegression
@@ -159,13 +162,21 @@ class SVM(BaseModel):
     def _predict(self, x: np.ndarray) -> np.ndarray:
         return self.model.predict_proba(x)[:, 1]
 
+
 # import naive bayes
 from sklearn.naive_bayes import GaussianNB
+
 
 class EnsembleLDAPolySVM(BaseModel):
     name = "Ensemble"
 
-    def __init__(self, poly_degree: int = 2, interactions_only: bool = False, kernel: str = "rbf", svm_degree: int = 3):
+    def __init__(
+        self,
+        poly_degree: int = 2,
+        interactions_only: bool = False,
+        kernel: str = "rbf",
+        svm_degree: int = 3,
+    ):
         self.lda = LDAPolynomial(poly_degree, interactions_only)
         self.svm = GaussianNB()
         self.lda_spline = LDASpline(degree=4, knots=5)
@@ -176,5 +187,25 @@ class EnsembleLDAPolySVM(BaseModel):
         self.lda_spline.fit(x, y)
 
     def _predict(self, x: np.ndarray) -> np.ndarray:
-        new_x = np.concatenate([self.lda.predict(x).reshape(-1, 1), self.svm.predict(x).reshape(-1, 1), self.lda_spline.predict(x).reshape(-1, 1)], axis=1)
+        new_x = np.concatenate(
+            [
+                self.lda.predict(x).reshape(-1, 1),
+                self.svm.predict(x).reshape(-1, 1),
+                self.lda_spline.predict(x).reshape(-1, 1),
+            ],
+            axis=1,
+        )
         return np.mean(new_x, axis=1)
+
+
+class NaiveBayes(BaseModel):
+    name = "NaiveBayes"
+
+    def __init__(self, var_smoothing: float = 1e-9):
+        self.model = GaussianNB(var_smoothing=var_smoothing)
+
+    def _fit(self, x: np.ndarray, y: np.ndarray) -> None:
+        self.model.fit(x, y)
+
+    def _predict(self, x: np.ndarray) -> np.ndarray:
+        return self.model.predict_proba(x)[:, 1]
