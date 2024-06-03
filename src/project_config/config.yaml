@@ -1,4 +1,0 @@
-data_folder: "../data"
-project: "AML_PROJECT_2"
-entity: "dl-mini"
-dataset_artifact_name: "bank-data"
